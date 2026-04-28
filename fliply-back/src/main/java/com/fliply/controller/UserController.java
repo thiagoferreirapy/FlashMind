@@ -59,6 +59,14 @@ public class UserController {
         if (body.containsKey("smartOrder"))           s.setSmartOrder((Boolean) body.get("smartOrder"));
         if (body.containsKey("whatsappEnabled"))      s.setWhatsappEnabled((Boolean) body.get("whatsappEnabled"));
         if (body.containsKey("notificationsEnabled")) s.setNotificationsEnabled((Boolean) body.get("notificationsEnabled"));
+        if (body.containsKey("whatsappPreferredTime")) {
+            String t = (String) body.get("whatsappPreferredTime");
+            s.setWhatsappTime(t != null ? java.time.LocalTime.parse(t) : null);
+        }
+        if (body.containsKey("whatsappDeckId")) {
+            Object val = body.get("whatsappDeckId");
+            s.setWhatsappDeckId(val != null ? Long.valueOf(val.toString()) : null);
+        }
 
         return ResponseEntity.ok(settingsRepository.save(s));
     }

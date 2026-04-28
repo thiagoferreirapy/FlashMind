@@ -6,7 +6,9 @@
       "Bash(where psql *)",
       "PowerShell(java --version 2>&1)",
       "PowerShell(mvn --version 2>&1)",
-      "PowerShell(Get-Command psql -ErrorAction SilentlyContinue)"
+      "PowerShell(Get-Command psql -ErrorAction SilentlyContinue)",
+      "Bash(mvn clean *)",
+      "Bash(jar tf *)"
     ]
   }
 }

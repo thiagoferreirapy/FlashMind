@@ -1,0 +1,135 @@
+🔥 O QUE VOCÊ JÁ TEM (tá bom)
+POST /api/decks/{id}/share ✔️
+DeckShare com shareCode, isPublic, allowClone ✔️
+geração de código ✔️
+
+👉 isso aqui já é a base pronta
+
+💥 O QUE FALTA (e é simples)
+1. 🔍 Buscar deck pelo código
+Endpoint:
+GET /api/decks/share/{code}
+
+Controller:
+@GetMapping("/share/{code}")
+public ResponseEntity<?> getSharedDeck(@PathVariable String code) {
+
+    DeckShare share = deckShareRepository.findByShareCode(code)
+        .orElseThrow(() -> new RuntimeException("Link inválido"));
+
+    if (!share.getIsPublic()) {
+        return ResponseEntity.status(403).body("Deck não é público");
+    }
+
+    Deck deck = share.getDeck();
+
+    return ResponseEntity.ok(deck);
+}
+
+2. 📥 Importar / clonar deck
+Endpoint:
+POST /api/decks/share/{code}/import
+
+Controller:
+@PostMapping("/share/{code}/import")
+public ResponseEntity<?> importDeck(
+        @PathVariable String code,
+        @AuthenticationPrincipal User user
+) {
+
+    DeckShare share = deckShareRepository.findByShareCode(code)
+        .orElseThrow(() -> new RuntimeException("Link inválido"));
+
+    if (!share.getAllowClone()) {
+        return ResponseEntity.status(403).body("Clone não permitido");
+    }
+
+    Deck original = share.getDeck();
+
+    Deck novo = new Deck();
+    novo.setName(original.getName());
+    novo.setDescription(original.getDescription());
+    novo.setColor(original.getColor());
+    novo.setUser(user);
+
+    deckRepository.save(novo);
+
+    for (Card c : original.getCards()) {
+        Card clone = new Card();
+        clone.setFrontText(c.getFrontText());
+        clone.setBackText(c.getBackText());
+        clone.setDeck(novo);
+        cardRepository.save(clone);
+    }
+
+    return ResponseEntity.ok(novo);
+}
+
+3. 🧾 (Opcional mas forte) histórico
+
+Cria tabela:
+
+@Entity
+public class DeckShareImport {
+
+    @Id @GeneratedValue
+    private Long id;
+
+    @ManyToOne
+    private User user;
+
+    @ManyToOne
+    private DeckShare share;
+
+    private LocalDateTime importedAt;
+}
+
+
+👉 salva quando importar → útil pra analytics depois
+
+⚠️ ERROS QUE VOCÊ VAI TER (se não corrigir)
+❌ Lazy loading
+
+Se deck.getCards() for LAZY:
+
+👉 vai dar erro
+
+resolve:
+@Query("SELECT d FROM Deck d JOIN FETCH d.cards WHERE d.id = :id")
+
+❌ Segurança
+
+Hoje você retorna o deck inteiro
+
+👉 pode vazar:
+
+userId
+dados internos
+
+👉 ideal: usar DTO
+
+🎨 FRONTEND (o que falta)
+Tela simples:
+Input:
+Digite o código do deck
+
+Botão:
+Visualizar
+
+Mostra:
+nome
+descrição
+quantidade de cards
+Botão:
+Importar
+
+🚀 FLUXO FINAL
+Usuário A gera código
+Usuário B coloca código
+frontend chama:
+GET /share/{code}
+
+mostra preview
+usuário clica importar
+chama:
+POST /share/{code}/import

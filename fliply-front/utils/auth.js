@@ -30,12 +30,14 @@ export const AuthService = {
   async login(email, password) {
     const data = await Api.post('/auth/login', { email, password })
     this.setSession(data.token, data.user)
+    window.dispatchEvent(new Event('user-logged-in'))
     return data
   },
 
   async register(name, email, password) {
     const data = await Api.post('/auth/register', { name, email, password })
     this.setSession(data.token, data.user)
+    window.dispatchEvent(new Event('user-logged-in'))
     return data
   },
 
@@ -51,6 +53,7 @@ export const AuthService = {
   },
 
   logout() {
+    window.dispatchEvent(new Event('user-logged-out'))
     this.clearSession()
     window.router.navigate('/login')
   }

@@ -1,9 +1,11 @@
 package com.fliply.controller;
 
 import com.fliply.dto.DeckDto;
+import com.fliply.dto.DeckShareDto;
 import com.fliply.model.DeckShare;
 import com.fliply.model.User;
 import com.fliply.service.DeckService;
+import com.fliply.service.DeckShareService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,7 @@ import java.util.Map;
 public class DeckController {
 
     private final DeckService deckService;
+    private final DeckShareService deckShareService;
 
     @GetMapping
     public ResponseEntity<List<DeckDto.Response>> getAll(@AuthenticationPrincipal User user) {
@@ -58,5 +61,17 @@ public class DeckController {
             "shareCode", share.getShareCode(),
             "isPublic",  share.getIsPublic()
         ));
+    }
+
+    @GetMapping("/share/{code}")
+    public ResponseEntity<DeckShareDto.PreviewWithCards> getSharedDeck(@PathVariable String code) {
+        return ResponseEntity.ok(deckShareService.getSharedDeckPreview(code));
+    }
+
+    @PostMapping("/share/{code}/import")
+    public ResponseEntity<DeckShareDto.ImportResponse> importSharedDeck(
+            @PathVariable String code,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(deckShareService.importSharedDeck(code, user));
     }
 }

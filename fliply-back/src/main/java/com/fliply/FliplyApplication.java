@@ -14,15 +14,14 @@ public class FliplyApplication {
                 .directory("./fliply-back")
                 .ignoreIfMissing()
                 .load();
-        
+
         // If not found in fliply-back, try current dir
         if (dotenv.entries().isEmpty()) {
             dotenv = Dotenv.configure().ignoreIfMissing().load();
         }
 
         dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
-        
+
         SpringApplication.run(FliplyApplication.class, args);
     }
 }
-

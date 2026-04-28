@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'FlashMind',
   webDir: 'www',
   server: {
-    url: 'http://192.168.15.7:5173/',
+    url: 'http://192.168.15.143:5173/',
     cleartext: true,
     androidScheme: 'https'
   },

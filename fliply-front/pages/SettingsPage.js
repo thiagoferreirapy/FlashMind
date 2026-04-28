@@ -71,7 +71,7 @@ export class SettingsPage {
               <label class="toggle"><input type="checkbox" id="toggle-whatsapp" ${s.whatsappEnabled ? 'checked' : ''}><span class="toggle-slider"></span></label></div>
             <div class="settings-item" id="edit-whatsapp-time">
               <div class="settings-item-icon" style="background:rgba(16,185,129,0.15)">${icon('clock', 18)}</div>
-              <div class="settings-item-info"><div class="settings-item-title">Horário de envio</div><div class="settings-item-sub">${s.whatsappPreferredTime ? `Envio às ${s.whatsappPreferredTime.split(':')[0]}h` : 'Toque para configurar'}</div></div>
+              <div class="settings-item-info"><div class="settings-item-title">Horário e deck do desafio</div><div class="settings-item-sub" id="whatsapp-cfg-sub">${s.whatsappPreferredTime ? `Envio às ${s.whatsappPreferredTime.split(':')[0]}h` : 'Toque para configurar'}</div></div>
               <div class="settings-item-right">›</div></div>
           </div>
 
@@ -254,29 +254,39 @@ export class SettingsPage {
     })
   }
 
-  _configWhatsapp() {
+  async _configWhatsapp() {
     const savedTime = this.settings.whatsappPreferredTime || '08:00'
     let selectedHour = parseInt(savedTime.split(':')[0])
+    let selectedDeckId = this.settings.whatsappDeckId || null
     const hours = Array.from({ length: 17 }, (_, i) => i + 6)
+
+    let decks = []
+    try { decks = await Api.get('/decks') } catch { decks = [] }
 
     const chipStyle = (h) => h === selectedHour
       ? 'background:var(--clr-primary);color:#fff;border-color:var(--clr-primary)'
       : 'background:var(--bg-secondary);color:var(--text-primary);border-color:var(--border-color)'
 
+    const deckOptions = [
+      `<option value="">Qualquer deck (aleatório)</option>`,
+      ...decks.map(d => `<option value="${d.id}" ${d.id == selectedDeckId ? 'selected' : ''}>${d.icon ? d.icon + ' ' : ''}${d.name}</option>`)
+    ].join('')
+
     const modal = new Modal({
       title: 'Desafios WhatsApp', content: `
       <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:var(--radius-md);padding:var(--space-md);margin-bottom:var(--space-md)">
-        <div style="display:column;gap:10px;align-items:flex-start">
-          <div style="display:flex;flex-shrink:0;color:rgba(16,185,129,0.9)">
-            ${icon('lightbulb', 20)}
-            <strong style="color:var(--text-primary);display:block;margin-bottom:4px; margin-left:4px">Como funcionaria</strong>
-          </div>
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div style="flex-shrink:0;color:rgba(16,185,129,0.9)">${icon('lightbulb', 20)}</div>
           <p style="color:var(--text-secondary);font-size:13px;line-height:1.65;margin:0">
-            
-            O sistema enviaria uma pergunta no WhatsApp, depois mostraria <em>Revelar resposta</em> e, em seguida, as ações <strong>Acertei</strong>, <strong>Quase</strong> e <strong>Errei</strong>. Cada resposta atualizaria a dificuldade do card e a próxima revisão.<br><br>
-            <span style="opacity:0.75">Neste protótipo, essa funcionalidade fica documentada e configurável dentro do app, mas sem integração real com a API do WhatsApp.</span>
+            O sistema enviaria uma pergunta no horário escolhido via WhatsApp. Cada resposta atualizaria a dificuldade do card automaticamente.
           </p>
         </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Deck para os desafios</label>
+        <select id="wa-deck-select" class="form-input">${deckOptions}</select>
+        <span class="form-hint">Cards serão sorteados do deck selecionado</span>
       </div>
 
       <div class="form-group">
@@ -311,13 +321,22 @@ export class SettingsPage {
 
     document.getElementById('wa-cfg-save').addEventListener('click', async () => {
       const time = String(selectedHour).padStart(2, '0') + ':00'
+      const deckId = document.getElementById('wa-deck-select').value || null
       try {
-        await Api.patch('/users/settings', { whatsappPreferredTime: time })
+        await Api.patch('/users/settings', {
+          whatsappPreferredTime: time,
+          whatsappDeckId: deckId ? parseInt(deckId) : null
+        })
         this.settings.whatsappPreferredTime = time
-        const sub = this.container.querySelector('#edit-whatsapp-time .settings-item-sub')
-        if (sub) sub.textContent = `Envio às ${String(selectedHour).padStart(2, '0')}h`
+        this.settings.whatsappDeckId = deckId ? parseInt(deckId) : null
+
+        const selectedDeck = decks.find(d => d.id == deckId)
+        const deckLabel = selectedDeck ? ` · ${selectedDeck.name}` : ''
+        const sub = this.container.querySelector('#whatsapp-cfg-sub')
+        if (sub) sub.textContent = `Envio às ${String(selectedHour).padStart(2, '0')}h${deckLabel}`
+
         modal.close()
-        window.toast.success('Horário salvo!')
+        window.toast.success('Configuração salva!')
       } catch (err) {
         window.toast.error(err.message)
       }

@@ -36,8 +36,12 @@ public class UserSettings {
     @Builder.Default
     private Boolean whatsappEnabled = false;
 
+    @com.fasterxml.jackson.annotation.JsonProperty("whatsappPreferredTime")
     @Column(name = "whatsapp_time")
     private LocalTime whatsappTime;
+
+    @Column(name = "whatsapp_deck_id")
+    private Long whatsappDeckId;
 
     @Column(name = "notifications_enabled", nullable = false)
     @Builder.Default

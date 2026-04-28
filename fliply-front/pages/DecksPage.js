@@ -23,7 +23,10 @@ export class DecksPage {
       <div class="animate-fade">
         <div class="page-header">
           <h1>Meus Decks</h1>
-          <button class="icon-btn" id="btn-new-deck" title="Novo deck">＋</button>
+          <div style="display: flex; gap: 8px;">
+            <button class="icon-btn" id="btn-import-deck" title="Importar deck" style="background: linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.1) 100%); color: #10B981;">${icon('download', 18)}</button>
+            <button class="icon-btn" id="btn-new-deck" title="Novo deck">＋</button>
+          </div>
         </div>
         <div style="padding:var(--space-md) var(--space-md) var(--space-sm)">
           <input type="search" class="form-input" id="deck-search" placeholder="Buscar decks..." value="${this.search}">
@@ -75,7 +78,9 @@ export class DecksPage {
 
   _bindEvents() {
     const openNew = () => this._openDeckModal()
+    const openImport = () => window.router.navigate('/import-deck')
     this.container.querySelector('#btn-new-deck')?.addEventListener('click', openNew)
+    this.container.querySelector('#btn-import-deck')?.addEventListener('click', openImport)
     this.container.querySelector('#fab-new-deck')?.addEventListener('click', openNew)
     this.container.querySelector('#btn-empty-new')?.addEventListener('click', openNew)
     this.container.querySelector('#deck-search')?.addEventListener('input', e => {

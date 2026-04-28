@@ -27,6 +27,8 @@ export const BiometricService = {
 
   async getCredentials() {
     try {
+      if (!NativeBiometric) throw new Error('Plugin Biométrico não encontrado');
+
       // Primeiro, obriga a verificação biométrica (mostra o prompt do celular)
       await NativeBiometric.verifyIdentity({
         reason: 'Acesse sua conta no Fliply',
@@ -43,6 +45,11 @@ export const BiometricService = {
     } catch (e) {
       // Se o usuário cancelar ou a biometria falhar, cai aqui
       console.error('Erro ou cancelamento da biometria', e);
+      // Re-throw if it's a critical error we want the UI to catch, 
+      // or return null if it's a "normal" failure (like cancel)
+      if (e.message?.includes('not found') || e.message?.includes('available')) {
+        throw e;
+      }
       return null;
     }
   },

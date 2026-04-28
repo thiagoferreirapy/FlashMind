@@ -40,6 +40,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 // Auth routes (login, register, forgot-password)
                 .requestMatchers("/api/auth/**").permitAll()
+                // Webhook do Uazap (chamado externamente, sem JWT)
+                .requestMatchers("/webhook/**").permitAll()
                 // Everything else requires authentication
                 .anyRequest().authenticated()
             )

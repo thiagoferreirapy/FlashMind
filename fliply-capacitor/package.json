@@ -23,5 +23,10 @@
     "@capacitor/splash-screen": "^8.0.1",
     "@capacitor/status-bar": "^8.0.2",
     "typescript": "^6.0.3"
+  },
+  "overrides": {
+    "@rolster/capacitor-native-biometric": {
+      "@capacitor/core": "$@capacitor/core"
+    }
   }
 }

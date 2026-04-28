@@ -1,7 +1,6 @@
 import { AuthService } from '../utils/auth.js'
 import { icon, refreshIcons } from '../utils/icons.js'
 import { BiometricService } from '../utils/biometric.js'
-import { Modal } from '../components/Modal.js'
 
 export class LoginPage {
   constructor(container) { this.container = container }
@@ -84,11 +83,21 @@ export class LoginPage {
   }
 
   async _loginBiometric() {
-    const creds = await BiometricService.getCredentials()
-    if (creds) {
-      document.getElementById('auth-email').value = creds.email
-      document.getElementById('auth-password').value = creds.password
-      this._login(true)
+    try {
+      const creds = await BiometricService.getCredentials()
+      if (creds) {
+        document.getElementById('auth-email').value = creds.email
+        document.getElementById('auth-password').value = creds.password
+        this._login(true)
+      } else {
+        // Biometria foi cancelada ou não retornou credenciais
+        window.toast.info('Biometria não disponível ou cancelada. Use seu e-mail e senha.')
+      }
+    } catch (e) {
+      console.error('Falha crítica na biometria:', e)
+      window.toast.error('Erro ao acessar biometria. Por favor, entre com sua senha.')
+      // Focar no campo de senha para o login normal
+      document.getElementById('auth-password')?.focus()
     }
   }
 
@@ -135,39 +144,7 @@ export class LoginPage {
   }
 
   _forgotPassword() {
-    const prefill = document.getElementById('auth-email')?.value.trim() || ''
-    const modal = new Modal({
-      title: 'Recuperar senha', content: `
-      <div style="text-align:center;margin-bottom:var(--space-md)">
-
-        <p style="color:var(--text-secondary);font-size:14px;line-height:1.5;margin:0">
-          Informe seu e-mail e enviaremos um link para você redefinir sua senha.
-        </p>
-      </div>
-      <div class="form-group">
-        <label class="form-label">E-mail</label>
-        <input id="fp-email" type="email" class="form-input" placeholder="seu@email.com" value="${prefill}" autocomplete="email">
-      </div>
-      <div class="flex gap-sm mt-md">
-        <button class="btn btn-secondary flex-1" id="fp-cancel">Cancelar</button>
-        <button class="btn btn-primary flex-1" id="fp-send">Enviar</button>
-      </div>` })
-    modal.open()
-    refreshIcons()
-    document.getElementById('fp-cancel').addEventListener('click', () => modal.close())
-    document.getElementById('fp-send').addEventListener('click', async () => {
-      const email = document.getElementById('fp-email').value.trim()
-      if (!email) { window.toast.error('Digite seu e-mail'); return }
-      const btn = document.getElementById('fp-send'); btn.disabled = true; btn.textContent = 'Enviando...'
-      try {
-        await AuthService.forgotPassword(email)
-        modal.close()
-        window.toast.success('Link enviado! Verifique sua caixa de entrada.')
-      } catch (err) {
-        window.toast.error(err.message)
-        btn.disabled = false; btn.textContent = 'Enviar'
-      }
-    })
+    window.router.navigate('/forgot-password')
   }
 
   destroy() { }

@@ -15,5 +15,10 @@
     "@capacitor/status-bar": "^8.0.2",
     "@capgo/capacitor-navigation-bar": "^8.0.19",
     "@rolster/capacitor-native-biometric": "^7.0.1"
+  },
+  "overrides": {
+    "@rolster/capacitor-native-biometric": {
+      "@capacitor/core": "$@capacitor/core"
+    }
   }
 }
