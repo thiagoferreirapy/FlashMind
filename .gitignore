@@ -1,0 +1,20 @@
+node_modules/
+dist/
+build/
+.env
+*.log
+
+# Capacitor / Android
+android/build/
+android/app/build/
+
+# iOS
+ios/Pods/
+ios/build/
+
+# banco
+*.db
+
+# configs locais
+.vscode/
+.idea/

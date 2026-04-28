@@ -1,0 +1,27 @@
+{
+  "name": "fliply-capacitor",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "cd ../fliply-front && npm run build",
+    "cap:android": "npx cap open android",
+    "cap:ios": "npx cap open ios",
+    "cap:sync": "npx cap sync",
+    "cap:add:android": "npx cap add android",
+    "cap:add:ios": "npx cap add ios"
+  },
+  "dependencies": {
+    "@capgo/capacitor-navigation-bar": "^8.0.19",
+    "@rolster/capacitor-native-biometric": "^7.0.1"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.3.1",
+    "@capacitor/cli": "^8.3.1",
+    "@capacitor/core": "^8.3.1",
+    "@capacitor/ios": "^8.3.1",
+    "@capacitor/local-notifications": "^8.0.2",
+    "@capacitor/push-notifications": "^8.0.3",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2",
+    "typescript": "^6.0.3"
+  }
+}
