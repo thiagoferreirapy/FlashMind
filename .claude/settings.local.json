@@ -9,7 +9,13 @@
       "PowerShell(Get-Command psql -ErrorAction SilentlyContinue)",
       "Bash(mvn clean *)",
       "Bash(jar tf *)",
-      "Bash(grep -E \"\\\\.java$\")"
+      "Bash(grep -E \"\\\\.java$\")",
+      "Bash(xargs grep *)",
+      "Bash(mv fliply-capacitor *)",
+      "Bash(mv fliply.db flashmind.db)",
+      "Bash(sed -i 's/Abra o Fliply/Abra o FlashMind/g; s/no Fliply/no FlashMind/g' \"c:/Users/tf938/OneDrive/Documentos/fliplyProject/fliply-back/src/main/java/com/flashmind/service/WhatsAppService.java\")",
+      "Bash(sed -i 's|// Try to load .env from current dir or fliply-back dir|// Try to load .env from current dir or flashmind-back dir|g; s|// If not found in fliply-back, try current dir|// If not found in flashmind-back, try current dir|g' \"c:/Users/tf938/OneDrive/Documentos/fliplyProject/fliply-back/src/main/java/com/flashmind/FlashMindApplication.java\")",
+      "Bash(grep -v \"//.*fliply\")"
     ]
   }
 }
