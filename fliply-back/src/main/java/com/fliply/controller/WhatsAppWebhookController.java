@@ -3,6 +3,7 @@ package com.fliply.controller;
 import com.fliply.service.WhatsAppService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,10 +17,24 @@ public class WhatsAppWebhookController {
 
     private final WhatsAppService whatsAppService;
 
+    @Value("${uazap.webhook-secret:}")
+    private String webhookSecret;
+
     @PostMapping({"/uazap", "/uazap/**"})
-    public ResponseEntity<Void> receive(@RequestBody Map<String, Object> body) {
+    public ResponseEntity<Void> receive(
+            @RequestHeader(value = "x-webhook-token", required = false) String tokenHeader,
+            @RequestParam(value = "token", required = false) String tokenParam,
+            @RequestBody Map<String, Object> body) {
         try {
-            // Ignora webhooks de status (leitura, entrega, etc) para não poluir o log
+            // Valida o secret se estiver configurado
+            if (webhookSecret != null && !webhookSecret.isBlank()) {
+                String received = tokenHeader != null ? tokenHeader : tokenParam;
+                if (!webhookSecret.equals(received)) {
+                    log.warn("Webhook recebido com token inválido — requisição ignorada");
+                    return ResponseEntity.status(401).build();
+                }
+            }
+
             String type = String.valueOf(body.get("type"));
             if ("ReadReceipt".equals(type) || "Delivered".equals(body.get("state"))) {
                 return ResponseEntity.ok().build();
@@ -30,16 +45,14 @@ public class WhatsAppWebhookController {
             String phone = extractField(body, "number", "from", "phone", "remoteJid", "sender_pn", "participant", "Chat", "Sender");
             String message = extractField(body, "message", "text", "body", "conversation", "content", "caption", "textMessage");
 
-            log.info("Dados extraídos do Webhook - Phone: {}, Message: {}", phone, message);
+            log.info("Dados extraídos - Phone: {}, Message: {}", phone, message);
 
             if (phone == null || message == null || message.isBlank()) {
                 return ResponseEntity.ok().build();
             }
 
-            // Limpa o @s.whatsapp.net se vier no phone
             phone = phone.split("@")[0];
 
-            // ignora mensagens muito curtas (ex: "ok", "oi", stickers)
             if (message.trim().length() < 2) return ResponseEntity.ok().build();
 
             whatsAppService.processWebhookAnswer(phone, message.trim());
@@ -53,19 +66,15 @@ public class WhatsAppWebhookController {
     private String extractField(Map<?, ?> map, String... keys) {
         if (map == null) return null;
 
-        // 1. Procura as chaves no nível atual
         for (String key : keys) {
             Object val = map.get(key);
             if (val instanceof String s && !s.isBlank()) return s;
-            
-            // Se o valor da chave for outro mapa (ex: "textMessage": {"text": "..."})
             if (val instanceof Map<?, ?> innerMap) {
                 String found = extractField(innerMap, keys);
                 if (found != null) return found;
             }
         }
 
-        // 2. Procura em mapas aninhados (caso a estrutura seja data -> event -> message)
         for (Object value : map.values()) {
             if (value instanceof Map<?, ?> innerMap) {
                 String found = extractField(innerMap, keys);

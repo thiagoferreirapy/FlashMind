@@ -43,4 +43,8 @@ export class Deck {
   async share() {
     return Api.post(`/decks/${this.id}/share`, {})
   }
+
+  async updateShareVisibility(isPublic) {
+    return Api.patch(`/decks/${this.id}/share/visibility`, { isPublic })
+  }
 }

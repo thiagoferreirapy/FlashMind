@@ -21,6 +21,7 @@ public class DeckShareService {
     private final CardRepository cardRepository;
     private final DeckRepository deckRepository;
 
+    @Transactional(readOnly = true)
     public DeckShareDto.PreviewWithCards getSharedDeckPreview(String code) {
         DeckShare share = deckShareRepository.findByShareCode(code)
                 .orElseThrow(() -> new IllegalArgumentException("Código de compartilhamento inválido"));

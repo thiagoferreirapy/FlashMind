@@ -95,14 +95,12 @@ public class WhatsAppService {
 
         List<WhatsAppChallenge> results = challengeRepository.findLatestSentByPhone(normalizedPhone);
 
-        // Tenta sem o prefixo 55 caso não encontre
         if (results.isEmpty() && normalizedPhone.startsWith("55")) {
             String shortPhone = normalizedPhone.substring(2);
             log.info("Desafio não encontrado com 55, tentando com: {}", shortPhone);
             results = challengeRepository.findLatestSentByPhone(shortPhone);
         }
 
-        // Fallback para o nono dígito brasileiro (busca pelos últimos 8 dígitos)
         if (results.isEmpty() && normalizedPhone.length() >= 8) {
             String last8 = normalizedPhone.substring(normalizedPhone.length() - 8);
             log.info("Tentando busca flexível pelos últimos 8 dígitos: {}", last8);
@@ -116,6 +114,12 @@ public class WhatsAppService {
         }
 
         WhatsAppChallenge challenge = results.get(0);
+
+        // Fix 1 — marca como "answered" imediatamente para evitar processamento duplicado
+        challenge.setStatus("answered");
+        challenge.setAnsweredAt(LocalDateTime.now());
+        challengeRepository.save(challenge);
+
         User user = challenge.getUser();
         Card card = challenge.getCard();
 
@@ -124,12 +128,14 @@ public class WhatsAppService {
             answerType = geminiService.evaluate(challenge.getFrontText(), challenge.getBackText(), userAnswer);
             log.info("Avaliação da IA para a resposta '{}': {}", userAnswer, answerType);
         } catch (Exception e) {
+            // Fix 4 — Gemini falhou: não penaliza o usuário
             log.error("Erro ao avaliar com Gemini: {}", e.getMessage());
-            answerType = "wrong";
+            challenge.setStatus("eval_failed");
+            challengeRepository.save(challenge);
+            sendMessage(normalizedPhone, "⚠️ Não consegui avaliar sua resposta agora. Tente responder novamente em instantes.");
+            return;
         }
 
-        challenge.setStatus("answered");
-        challenge.setAnsweredAt(LocalDateTime.now());
         challenge.setAnswerType(answerType);
         challenge.setAiClassification(answerType);
         challengeRepository.save(challenge);
@@ -207,9 +213,10 @@ public class WhatsAppService {
 
     private Card pickCardFromDeck(User user, Long deckId, LocalDateTime now) {
         Deck deck = deckRepository.findById(deckId).orElse(null);
-        if (deck == null) {
-            log.warn("Deck {} não encontrado para usuário {}", deckId, user.getId());
-            return null;
+        // Fix 3 — verifica se o deck existe e pertence ao usuário
+        if (deck == null || !deck.getUser().getId().equals(user.getId())) {
+            log.warn("Deck {} não encontrado ou não pertence ao usuário {}", deckId, user.getId());
+            return pickCardFromAllDecks(user, now);
         }
 
         List<Card> deckCards = cardRepository.findByDeckOrderByPosition(deck);
@@ -345,6 +352,12 @@ public class WhatsAppService {
         for (WhatsAppChallenge challenge : failed) {
             retried++;
             log.info("Retry desafio {}/{} para {}", retried, failed.size(), challenge.getPhone());
+
+            // Fix 5 — card pode ter sido deletado após o desafio ser criado
+            if (challenge.getCard() == null) {
+                log.warn("Card do desafio {} foi deletado, pulando retry", challenge.getId());
+                continue;
+            }
 
             String message = formatChallengeMessage(challenge.getCard());
             boolean sent = sendMessage(challenge.getPhone(), message);

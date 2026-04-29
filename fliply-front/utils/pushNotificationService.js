@@ -77,7 +77,7 @@ export const PushNotificationService = {
   },
 
   _handleForeground(notification) {
-    const title = notification.title || 'Fliply'
+    const title = notification.title || 'FlashMind'
     const body  = notification.body  || ''
 
     if (window.toast) {

@@ -99,4 +99,16 @@ public class DeckService {
             return shareRepository.save(share);
         });
     }
+
+    @Transactional
+    public DeckShare updateShareVisibility(Long deckId, boolean isPublic, User user) {
+        deckRepository.findByIdAndUser(deckId, user)
+            .orElseThrow(() -> new IllegalArgumentException("Deck não encontrado"));
+
+        DeckShare share = shareRepository.findByDeckId(deckId)
+            .orElseThrow(() -> new IllegalArgumentException("Compartilhe o deck primeiro"));
+
+        share.setIsPublic(isPublic);
+        return shareRepository.save(share);
+    }
 }

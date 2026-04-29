@@ -36,9 +36,4 @@ public class AuthController {
         authService.changePassword(user, request.getCurrentPassword(), request.getNewPassword());
         return ResponseEntity.ok(Map.of("message", "Senha alterada com sucesso"));
     }
-
-    @PostMapping("/forgot-password")
-    public ResponseEntity<Map<String, String>> forgotPassword(@Valid @RequestBody AuthDto.ForgotPasswordRequest request) {
-        return ResponseEntity.ok(Map.of("message", "Se o e-mail existir, você receberá as instruções"));
-    }
 }

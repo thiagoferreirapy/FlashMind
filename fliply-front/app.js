@@ -15,7 +15,7 @@ async function init() {
   ThemeService.init()
   window.router = new Router()
 
-  const publicRoutes = ['/onboarding', '/login', '/register', '/forgot-password', '/reset-password']
+  const publicRoutes = ['/onboarding', '/login', '/register', '/reset-password']
 
   window.addEventListener('routechange', (e) => {
     const route = e.detail.route
@@ -43,6 +43,7 @@ async function init() {
   }
 
   window.router.init()
+  window.loader.hide()
 
   // Inicia push notifications após login bem-sucedido
   if (isAuthenticated) {

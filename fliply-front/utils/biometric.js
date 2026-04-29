@@ -31,7 +31,7 @@ export const BiometricService = {
 
       // Primeiro, obriga a verificação biométrica (mostra o prompt do celular)
       await NativeBiometric.verifyIdentity({
-        reason: 'Acesse sua conta no Fliply',
+        reason: 'Acesse sua conta no FlashMind',
         title: 'Login Biométrico',
         subtitle: 'Use sua digital para entrar',
         description: 'Toque no sensor para continuar'

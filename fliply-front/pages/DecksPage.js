@@ -2,6 +2,7 @@ import { Deck } from '../models/Deck.js'
 import { Modal } from '../components/Modal.js'
 import { DECK_COLORS, DECK_ICONS, renderDeckIcon } from '../utils/helpers.js'
 import { icon, refreshIcons } from '../utils/icons.js'
+import { setButtonLoading, resetButton } from '../utils/btnLoader.js'
 
 export class DecksPage {
   constructor(container) {
@@ -147,14 +148,14 @@ export class DecksPage {
     document.getElementById('deck-save').addEventListener('click', async () => {
       const name = document.getElementById('deck-name').value.trim()
       if (!name) { window.toast.error('Nome é obrigatório'); return }
-      const btn = document.getElementById('deck-save'); btn.disabled = true; btn.textContent = 'Salvando...'
+      const btn = document.getElementById('deck-save'); setButtonLoading(btn, 'Salvando...')
       const payload = { name, description: document.getElementById('deck-desc').value.trim(), icon: selectedIcon, color: selectedColor }
       try {
         if (isEdit) { const updated = await existing.update(payload); const idx = this.decks.findIndex(d => d.id === existing.id); if (idx >= 0) this.decks[idx] = updated }
         else { const deck = await Deck.create(payload); this.decks.unshift(deck) }
         modal.close(); this.container.innerHTML = this._template(); this._bindEvents(); refreshIcons()
         window.toast.success(isEdit ? 'Deck atualizado!' : 'Deck criado!')
-      } catch (err) { window.toast.error(err.message); btn.disabled = false; btn.textContent = isEdit ? 'Salvar' : 'Criar' }
+      } catch (err) { window.toast.error(err.message); resetButton(btn, isEdit ? 'Salvar' : 'Criar') }
     })
   }
 
@@ -172,8 +173,52 @@ export class DecksPage {
     document.getElementById('dm-study').addEventListener('click', () => { modal.close(); window.router.navigate(`/study/${deck.id}`) })
     document.getElementById('dm-edit').addEventListener('click', () => { modal.close(); this._openDeckModal(deck) })
     document.getElementById('dm-share').addEventListener('click', async () => {
-      try { const res = await deck.share(); modal.close(); window.toast.success(`Código: ${res.shareCode}`) }
-      catch (err) { window.toast.error(err.message) }
+      try {
+        const res = await deck.share()
+        modal.close()
+        const shareModal = new Modal({ title: 'Compartilhar deck', content: `
+          <p style="color:var(--text-secondary);margin-bottom:var(--space-md)">Compartilhe este código com outros usuários:</p>
+          <div style="background:var(--bg-input);border-radius:var(--radius-md);padding:var(--space-md);text-align:center;font-size:24px;font-weight:800;letter-spacing:0.1em;color:var(--clr-primary-light)">${res.shareCode}</div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:var(--space-md);padding:var(--space-md);background:var(--bg-input);border-radius:var(--radius-md)">
+            <div>
+              <div style="font-weight:600;font-size:14px">Visibilidade</div>
+              <div id="visibility-label" style="font-size:12px;color:var(--text-secondary);margin-top:2px">${res.isPublic ? 'Público — qualquer um pode importar' : 'Privado — somente você acessa'}</div>
+            </div>
+            <label style="position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0">
+              <input type="checkbox" id="visibility-toggle" ${res.isPublic ? 'checked' : ''} style="opacity:0;width:0;height:0">
+              <span id="visibility-slider" style="position:absolute;cursor:pointer;inset:0;border-radius:24px;background:${res.isPublic ? '#7C3AED' : 'var(--border-color)'};transition:background 0.2s">
+                <span style="position:absolute;height:18px;width:18px;left:${res.isPublic ? '23px' : '3px'};bottom:3px;border-radius:50%;background:#fff;transition:left 0.2s;display:block" id="visibility-knob"></span>
+              </span>
+            </label>
+          </div>
+
+          <button class="btn btn-primary btn-block mt-md" id="copy-code">${icon('clipboard',16)} Copiar código</button>`
+        })
+        shareModal.open(); refreshIcons()
+
+        document.getElementById('copy-code')?.addEventListener('click', () => {
+          navigator.clipboard?.writeText(res.shareCode)
+          window.toast.success('Código copiado!')
+        })
+
+        document.getElementById('visibility-toggle')?.addEventListener('change', async (e) => {
+          const newValue = e.target.checked
+          const slider = document.getElementById('visibility-slider')
+          const knob = document.getElementById('visibility-knob')
+          const label = document.getElementById('visibility-label')
+          try {
+            await deck.updateShareVisibility(newValue)
+            slider.style.background = newValue ? '#7C3AED' : 'var(--border-color)'
+            knob.style.left = newValue ? '23px' : '3px'
+            label.textContent = newValue ? 'Público — qualquer um pode importar' : 'Privado — somente você acessa'
+            window.toast.success(newValue ? 'Deck público!' : 'Deck privado!')
+          } catch (err) {
+            e.target.checked = !newValue
+            window.toast.error(err.message)
+          }
+        })
+      } catch (err) { window.toast.error(err.message) }
     })
     document.getElementById('dm-delete').addEventListener('click', () => {
       modal.close()

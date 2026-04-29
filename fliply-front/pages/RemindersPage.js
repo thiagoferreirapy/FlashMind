@@ -2,6 +2,7 @@ import { Api } from '../utils/api.js'
 import { Modal } from '../components/Modal.js'
 import { Deck } from '../models/Deck.js'
 import { icon, refreshIcons } from '../utils/icons.js'
+import { setButtonLoading, resetButton } from '../utils/btnLoader.js'
 
 const REMINDER_TYPES = {
   general:     { label: 'Geral',            icon: 'clock',       desc: 'Lembrete para estudar' },
@@ -15,11 +16,7 @@ const FREQ_OPTS = [
   { value: 'weekly',   label: 'Semanalmente' },
 ]
 
-const CHANNEL_OPTS = [
-  { value: 'push',     icon: 'bell',            label: 'Notificação push' },
-  { value: 'whatsapp', icon: 'message-circle',  label: 'WhatsApp' },
-  { value: 'in_app',   icon: 'smartphone',      label: 'No app' },
-]
+const DEFAULT_CHANNEL = 'in_app'
 
 export class RemindersPage {
   constructor(container) { this.container = container; this.reminders = []; this.decks = [] }
@@ -110,10 +107,7 @@ export class RemindersPage {
         <select id="rem-freq" class="form-input">
           ${FREQ_OPTS.map(f => `<option value="${f.value}" ${r?.frequency === f.value ? 'selected' : ''}>${f.label}</option>`).join('')}
         </select></div>
-      <div class="form-group"><label class="form-label">Canal</label>
-        <select id="rem-channel" class="form-input">
-          ${CHANNEL_OPTS.map(c => `<option value="${c.value}" ${r?.channel === c.value ? 'selected' : ''}>${c.label}</option>`).join('')}
-        </select></div>`
+      `
   }
 
   _bindTypeChange() {
@@ -136,15 +130,15 @@ export class RemindersPage {
       const type = document.getElementById('rem-type').value, title = document.getElementById('rem-title').value.trim()
       const description = document.getElementById('rem-desc').value.trim() || null
       const time = document.getElementById('rem-time').value, freq = document.getElementById('rem-freq').value
-      const channel = document.getElementById('rem-channel').value
+      const channel = DEFAULT_CHANNEL
       const deckId = type === 'deck_review' ? document.getElementById('rem-deck').value : null
       if (!title) { window.toast.error('Título é obrigatório'); return }
       if (type === 'deck_review' && !deckId) { window.toast.error('Selecione um deck'); return }
-      const btn = document.getElementById('rem-save'); btn.disabled = true; btn.textContent = 'Criando...'
+      const btn = document.getElementById('rem-save'); setButtonLoading(btn, 'Criando...')
       try {
         const reminder = await Api.post('/reminders', { type, title, description, timeOfDay: time, frequency: freq, channel, deckId: deckId || null, isActive: true })
         this.reminders.unshift(reminder); modal.close(); this.container.innerHTML = this._template(); this._bindEvents(); refreshIcons(); window.toast.success('Lembrete criado!')
-      } catch (err) { window.toast.error(err.message); btn.disabled = false; btn.textContent = 'Criar' }
+      } catch (err) { window.toast.error(err.message); resetButton(btn, 'Criar') }
     })
   }
 
@@ -160,6 +154,7 @@ export class RemindersPage {
     this._bindTypeChange()
     document.getElementById('rem-cancel').addEventListener('click', () => modal.close())
     document.getElementById('rem-delete').addEventListener('click', () => {
+      modal.close()
       Modal.confirm({
         title: 'Excluir lembrete',
         message: 'Tem certeza que deseja excluir este lembrete?',
@@ -172,25 +167,26 @@ export class RemindersPage {
             this.container.innerHTML = this._template(); this._bindEvents(); refreshIcons()
             window.toast.success('Lembrete excluído')
           } catch (err) { window.toast.error(err.message) }
-        }
+        },
+        onCancel: () => this._openEditModal(r)
       })
     })
     document.getElementById('rem-save').addEventListener('click', async () => {
       const type = document.getElementById('rem-type').value, title = document.getElementById('rem-title').value.trim()
       const description = document.getElementById('rem-desc').value.trim() || null
       const time = document.getElementById('rem-time').value, freq = document.getElementById('rem-freq').value
-      const channel = document.getElementById('rem-channel').value
+      const channel = DEFAULT_CHANNEL
       const deckId = type === 'deck_review' ? document.getElementById('rem-deck').value || null : null
       if (!title) { window.toast.error('Título é obrigatório'); return }
       if (type === 'deck_review' && !deckId) { window.toast.error('Selecione um deck'); return }
-      const btn = document.getElementById('rem-save'); btn.disabled = true; btn.textContent = 'Salvando...'
+      const btn = document.getElementById('rem-save'); setButtonLoading(btn, 'Salvando...')
       try {
         const updated = await Api.patch(`/reminders/${r.id}`, { type, title, description, timeOfDay: time, frequency: freq, channel, deckId })
         const idx = this.reminders.findIndex(x => x.id === r.id)
         if (idx !== -1) this.reminders[idx] = updated
         modal.close(); this.container.innerHTML = this._template(); this._bindEvents(); refreshIcons()
         window.toast.success('Lembrete atualizado!')
-      } catch (err) { window.toast.error(err.message); btn.disabled = false; btn.textContent = 'Salvar' }
+      } catch (err) { window.toast.error(err.message); resetButton(btn, 'Salvar') }
     })
   }
 

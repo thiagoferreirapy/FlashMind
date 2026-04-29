@@ -3,6 +3,7 @@ import { Api } from '../utils/api.js'
 import { Modal } from '../components/Modal.js'
 import { initials } from '../utils/helpers.js'
 import { icon, refreshIcons } from '../utils/icons.js'
+import { setButtonLoading, resetButton } from '../utils/btnLoader.js'
 import { ThemeService } from '../utils/theme.js'
 
 export class SettingsPage {
@@ -81,10 +82,6 @@ export class SettingsPage {
               <div class="settings-item-icon" style="background:rgba(16,185,129,0.15)">${icon('smartphone', 18)}</div>
               <div class="settings-item-info"><div class="settings-item-title">Número WhatsApp</div><div class="settings-item-sub">${u.whatsappPhone || 'Não vinculado'}</div></div>
               <div class="settings-item-right">›</div></div>
-            <div class="settings-item" id="change-password">
-              <div class="settings-item-icon" style="background:rgba(245,158,11,0.15)">${icon('lock', 18)}</div>
-              <div class="settings-item-info"><div class="settings-item-title">Alterar senha</div></div>
-              <div class="settings-item-right">›</div></div>
           </div>
 
           <button class="btn btn-danger btn-block mt-md" id="btn-logout">Sair da conta</button>
@@ -98,7 +95,6 @@ export class SettingsPage {
     this.container.querySelector('#edit-daily-goal')?.addEventListener('click', () => this._editNumber('dailyGoal', 'Meta diária', 'cards por dia'))
     this.container.querySelector('#edit-session-size')?.addEventListener('click', () => this._editNumber('sessionSize', 'Tamanho da sessão', 'cards por sessão'))
     this.container.querySelector('#edit-theme')?.addEventListener('click', () => this._editTheme())
-    this.container.querySelector('#change-password')?.addEventListener('click', () => this._changePassword())
     this.container.querySelector('#btn-logout')?.addEventListener('click', () => {
       Modal.confirm({ title: 'Sair', message: 'Tem certeza que deseja sair da conta?', confirmText: 'Sair', danger: true, onConfirm: () => AuthService.logout() })
     })
@@ -171,9 +167,9 @@ export class SettingsPage {
     document.getElementById('prof-save').addEventListener('click', async () => {
       const name = document.getElementById('prof-name').value.trim(), email = document.getElementById('prof-email').value.trim()
       if (!name || !email) { window.toast.error('Preencha todos os campos'); return }
-      const btn = document.getElementById('prof-save'); btn.disabled = true; btn.textContent = 'Salvando...'
+      const btn = document.getElementById('prof-save'); setButtonLoading(btn, 'Salvando...')
       try { await AuthService.updateProfile({ name, email }); this.user = AuthService.getUser(); modal.close(); this.container.innerHTML = this._template(); this._bindEvents(); refreshIcons(); window.toast.success('Perfil atualizado!') }
-      catch (err) { window.toast.error(err.message); btn.disabled = false; btn.textContent = 'Salvar' }
+      catch (err) { window.toast.error(err.message); resetButton(btn, 'Salvar') }
     })
   }
 
@@ -231,25 +227,6 @@ export class SettingsPage {
       const val = parseInt(document.getElementById('num-input').value)
       if (!val || val < 1) { window.toast.error('Valor inválido'); return }
       try { await Api.patch('/users/settings', { [field]: val }); this.settings[field] = val; modal.close(); this.container.innerHTML = this._template(); this._bindEvents(); refreshIcons(); window.toast.success('Configuração salva!') }
-      catch (err) { window.toast.error(err.message) }
-    })
-  }
-
-  _changePassword() {
-    const modal = new Modal({
-      title: 'Alterar senha', content: `
-      <div class="form-group"><label class="form-label">Senha atual</label><input id="pw-current" type="password" class="form-input" placeholder="••••••••"></div>
-      <div class="form-group"><label class="form-label">Nova senha</label><input id="pw-new" type="password" class="form-input" placeholder="Mínimo 8 caracteres"></div>
-      <div class="form-group"><label class="form-label">Confirmar nova senha</label><input id="pw-confirm" type="password" class="form-input" placeholder="Repita a nova senha"></div>
-      <div class="flex gap-sm mt-md"><button class="btn btn-secondary flex-1" id="pw-cancel">Cancelar</button><button class="btn btn-primary flex-1" id="pw-save">Alterar</button></div>` })
-    modal.open()
-    document.getElementById('pw-cancel').addEventListener('click', () => modal.close())
-    document.getElementById('pw-save').addEventListener('click', async () => {
-      const current = document.getElementById('pw-current').value, newPw = document.getElementById('pw-new').value, confirm = document.getElementById('pw-confirm').value
-      if (!current || !newPw) { window.toast.error('Preencha todos os campos'); return }
-      if (newPw.length < 8) { window.toast.error('Senha deve ter pelo menos 8 caracteres'); return }
-      if (newPw !== confirm) { window.toast.error('Senhas não conferem'); return }
-      try { await Api.post('/auth/change-password', { currentPassword: current, newPassword: newPw }); modal.close(); window.toast.success('Senha alterada!') }
       catch (err) { window.toast.error(err.message) }
     })
   }

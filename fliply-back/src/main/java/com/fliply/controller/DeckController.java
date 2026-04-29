@@ -63,6 +63,19 @@ public class DeckController {
         ));
     }
 
+    @PatchMapping("/{id}/share/visibility")
+    public ResponseEntity<Map<String, Object>> updateShareVisibility(
+            @PathVariable Long id,
+            @RequestBody Map<String, Boolean> body,
+            @AuthenticationPrincipal User user) {
+        boolean isPublic = Boolean.TRUE.equals(body.get("isPublic"));
+        DeckShare share = deckService.updateShareVisibility(id, isPublic, user);
+        return ResponseEntity.ok(Map.of(
+            "shareCode", share.getShareCode(),
+            "isPublic",  share.getIsPublic()
+        ));
+    }
+
     @GetMapping("/share/{code}")
     public ResponseEntity<DeckShareDto.PreviewWithCards> getSharedDeck(@PathVariable String code) {
         return ResponseEntity.ok(deckShareService.getSharedDeckPreview(code));

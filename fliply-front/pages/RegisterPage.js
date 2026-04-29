@@ -1,5 +1,6 @@
 import { AuthService } from '../utils/auth.js'
 import { icon, refreshIcons } from '../utils/icons.js'
+import { setButtonLoading, resetButton } from '../utils/btnLoader.js'
 
 export class RegisterPage {
   constructor(container) { this.container = container }
@@ -81,16 +82,16 @@ export class RegisterPage {
     if (pass !== pass2)           { window.toast.error('As senhas não conferem'); return }
 
     const btn = document.getElementById('btn-register')
-    btn.disabled = true; btn.textContent = 'Criando conta...'
+    setButtonLoading(btn, 'Criando conta...')
 
     try {
       await AuthService.register(name, email, pass)
-      window.toast.success('Conta criada! Bem-vindo ao Fliply!')
+      window.toast.success('Conta criada! Bem-vindo ao FlashMind!')
       window.router.navigate('/home')
     } catch (err) {
       window.toast.error(err.message || 'Erro ao criar conta')
     } finally {
-      btn.disabled = false; btn.textContent = 'Criar conta'
+      resetButton(btn, 'Criar conta')
     }
   }
 

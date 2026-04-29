@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -10,20 +12,149 @@
   <title>FlashMind</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <script>
+    (function () {
+      var t = localStorage.getItem('fliply_theme') || 'system'
+      var isDark = t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+      document.documentElement.classList.add(isDark ? 'dark-theme' : 'light-theme')
+      document.documentElement.style.setProperty('--loader-bg', isDark ? '#0D0D1A' : '#FFFFFF')
+    })()
+  </script>
+  <style>
+    #loader {
+      position: fixed;
+      inset: 0;
+      background: var(--loader-bg, #0D0D1A);
+      z-index: 900;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 28px;
+      transition: opacity 0.32s ease;
+    }
+
+    #loader.active {
+      display: flex;
+    }
+
+    #loader.hiding {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loader-cards {
+      position: relative;
+      width: 96px;
+      height: 120px;
+    }
+
+    .loader-card {
+      position: absolute;
+      inset: 0;
+      border-radius: 14px;
+      transform-origin: center bottom;
+    }
+
+    .loader-card-1 {
+      background: linear-gradient(145deg, #A78BFA, #7C3AED);
+      box-shadow: 0 6px 24px rgba(124, 58, 237, 0.45);
+      animation: cardFan1 2.0s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+    }
+
+    .loader-card-2 {
+      background: linear-gradient(145deg, #C4B5FD, #9333EA);
+      box-shadow: 0 6px 24px rgba(147, 51, 234, 0.35);
+      animation: cardFan2 2.0s cubic-bezier(0.34, 1.56, 0.64, 1) 0.8s both;
+    }
+
+    .loader-card-3 {
+      background: linear-gradient(145deg, #DDD6FE, #A78BFA);
+      box-shadow: 0 6px 24px rgba(167, 139, 250, 0.25);
+      animation: cardFan3 2.0s cubic-bezier(0.34, 1.56, 0.64, 1) 1.4s both;
+    }
+
+    @keyframes cardFan1 {
+      from {
+        opacity: 0;
+        transform: scale(0.5) rotate(0deg) translateY(24px);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) rotate(-18deg) translateY(0);
+      }
+    }
+
+    @keyframes cardFan2 {
+      from {
+        opacity: 0;
+        transform: scale(0.5) rotate(0deg) translateY(24px);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) rotate(0deg) translateY(-8px);
+      }
+    }
+
+    @keyframes cardFan3 {
+      from {
+        opacity: 0;
+        transform: scale(0.5) rotate(0deg) translateY(24px);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) rotate(18deg) translateY(0);
+      }
+    }
+
+    .loader-brand {
+      font-family: 'Inter', sans-serif;
+      font-size: 24px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #A78BFA, #6EE7B7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      opacity: 0;
+      animation: loaderBrandIn 0.8s ease 3.2s forwards;
+    }
+
+    @keyframes loaderBrandIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
 </head>
+
 <body>
   <div id="app">
     <div id="view-container"></div>
     <div id="bottom-nav"></div>
     <div id="toast-container"></div>
     <div id="modal-container"></div>
-    <div id="loader">
-      <div class="loader-logo">Fliply</div>
-      <div class="spinner"></div>
+    <div id="loader" class="active">
+      <div class="loader-cards">
+        <div class="loader-card loader-card-1"></div>
+        <div class="loader-card loader-card-2"></div>
+        <div class="loader-card loader-card-3"></div>
+      </div>
+      <div class="loader-brand">FlashMind</div>
     </div>
   </div>
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script type="module" src="/app.js"></script>
 </body>
+
 </html>

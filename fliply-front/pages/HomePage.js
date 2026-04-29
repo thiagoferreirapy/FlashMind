@@ -40,12 +40,19 @@ export class HomePage {
     const wrongToday = this.stats.wrongToday ?? 0
     const goal = this.stats.dailyGoal ?? 20
     const progress = Math.min(100, goal > 0 ? Math.round((studied / goal) * 100) : 0)
+    const motivationalMsg = studied >= goal
+      ? 'Meta atingida!'
+      : studied === 0
+        ? 'Que tal começar agora?'
+        : wrongToday > 0 && wrongToday > rightToday
+          ? 'Não desanime, revisar os erros é estudar!'
+          : 'Continue assim!'
 
     return `
       <div class="animate-fade">
         <div class="page-header">
           <div style="flex:1">
-            <div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.08em">Fliply</div>
+            <div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.08em">FlashMind</div>
             <div style="font-size:17px;font-weight:700">${greeting}, ${user?.name?.split(' ')[0] || 'Estudante'} !</div>
           </div>
           <div class="avatar avatar-sm" id="home-avatar" style="cursor:pointer">${initials(user?.name)}</div>
@@ -65,7 +72,7 @@ export class HomePage {
           <!-- Progresso hoje -->
           <div class="card mb-md" style="padding:var(--space-md)">
             <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:var(--space-sm)">Progresso Hoje</div>
-            <div style="font-size:17px;font-weight:700;margin-bottom:var(--space-md)">${studied >= goal ? 'Meta atingida! 🎉' : 'Continue assim'}</div>
+            <div style="font-size:17px;font-weight:700;margin-bottom:var(--space-md)">${motivationalMsg}</div>
             <div class="flex gap-md mb-md">
               <div>
                 <div style="font-size:26px;font-weight:800;line-height:1">${studied}</div>

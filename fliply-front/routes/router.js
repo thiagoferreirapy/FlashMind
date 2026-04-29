@@ -9,7 +9,6 @@ import { DashboardPage } from '../pages/DashboardPage.js'
 import { RemindersPage } from '../pages/RemindersPage.js'
 import { SettingsPage } from '../pages/SettingsPage.js'
 import { ImportDeckPage } from '../pages/ImportDeckPage.js'
-import { ForgotPasswordPage } from '../pages/ForgotPasswordPage.js'
 import { ResetPasswordPage } from '../pages/ResetPasswordPage.js'
 import { refreshIcons } from '../utils/icons.js'
 
@@ -17,7 +16,6 @@ const ROUTES = {
   '/onboarding': OnboardingPage,
   '/login': LoginPage,
   '/register': RegisterPage,
-  '/forgot-password': ForgotPasswordPage,
   '/reset-password': ResetPasswordPage,
   '/home': HomePage,
   '/decks': DecksPage,

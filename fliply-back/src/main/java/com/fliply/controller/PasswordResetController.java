@@ -16,62 +16,13 @@ public class PasswordResetController {
 
     private final PasswordResetService passwordResetService;
 
-    @PostMapping("/forgot-password")
-    public ResponseEntity<PasswordResetDto.ForgotPasswordResponse> forgotPassword(
-            @Valid @RequestBody PasswordResetDto.ForgotPasswordRequest request) {
-
-        String email = request.getEmail();
-        if (email == null || email.isBlank()) {
-            return ResponseEntity.badRequest().body(
-                PasswordResetDto.ForgotPasswordResponse.builder()
-                    .message("Email é obrigatório")
-                    .build()
-            );
-        }
+    @PostMapping("/reset-password-direct")
+    public ResponseEntity<PasswordResetDto.ResetPasswordResponse> resetPasswordDirect(
+            @Valid @RequestBody PasswordResetDto.DirectResetRequest request) {
 
         try {
-            passwordResetService.sendPasswordResetEmail(email);
-            return ResponseEntity.ok(PasswordResetDto.ForgotPasswordResponse.success(email));
-        } catch (IllegalArgumentException e) {
-            log.warn("Tentativa de recuperação de senha para email não registrado: {}", email);
-            return ResponseEntity.ok(PasswordResetDto.ForgotPasswordResponse.success(email));
-        } catch (Exception e) {
-            log.error("Erro ao enviar email de recuperação: {}", e.getMessage());
-            return ResponseEntity.status(500).body(
-                PasswordResetDto.ForgotPasswordResponse.builder()
-                    .message("Erro ao processar solicitação. Tente novamente mais tarde.")
-                    .build()
-            );
-        }
-    }
-
-    @PostMapping("/validate-reset-token")
-    public ResponseEntity<PasswordResetDto.ValidateTokenResponse> validateToken(
-            @Valid @RequestBody PasswordResetDto.ValidateTokenRequest request) {
-
-        try {
-            String email = passwordResetService.validateResetToken(request.getToken());
-            return ResponseEntity.ok(PasswordResetDto.ValidateTokenResponse.valid(email));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(
-                PasswordResetDto.ValidateTokenResponse.invalid(e.getMessage())
-            );
-        }
-    }
-
-    @PostMapping("/reset-password")
-    public ResponseEntity<PasswordResetDto.ResetPasswordResponse> resetPassword(
-            @Valid @RequestBody PasswordResetDto.ResetPasswordRequest request) {
-
-        if (request.getToken() == null || request.getToken().isBlank()) {
-            return ResponseEntity.badRequest().body(
-                PasswordResetDto.ResetPasswordResponse.failure("Token é obrigatório")
-            );
-        }
-
-        try {
-            passwordResetService.resetPassword(
-                request.getToken(),
+            passwordResetService.resetPasswordDirect(
+                request.getEmail(),
                 request.getNewPassword(),
                 request.getConfirmPassword()
             );
